@@ -83,7 +83,10 @@ export const updateContact = async (req, res, next) => {
   try {
     const updatedContact = await updateExistingContact(contactId, req.body);
     if (!updatedContact) {
-      throw createError(404, 'Contact not found');
+      return res.status(404).json({
+        status: 404,
+        message: 'Contact not found',
+      });
     }
     res.status(200).json({
       status: 200,
