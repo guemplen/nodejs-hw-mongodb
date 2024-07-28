@@ -6,31 +6,46 @@ import {
   deleteContactById,
 } from '../services/contacts.js';
 import createError from 'http-errors';
-import mongoose from 'mongoose';
 
-export const getContacts = async (req, res) => {
+export const getContacts = async (req, res, next) => {
+  const { page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc' } = req.query;
+
+  const pageNum = parseInt(page);
+  const perPageNum = parseInt(perPage);
+
+  if (isNaN(pageNum) || isNaN(perPageNum) || pageNum <= 0 || perPageNum <= 0) {
+    return next(createError(400, 'Invalid page or perPage parameter'));
+  }
+
+  const sortOptions = {};
+  sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
   try {
-    const contacts = await getAllContacts();
+    const { data, totalItems } = await getAllContacts(pageNum, perPageNum);
+    const totalPages = Math.ceil(totalItems / perPageNum);
+    const hasPreviousPage = pageNum > 1;
+    const hasNextPage = pageNum < totalPages;
+
     res.status(200).json({
       status: 200,
       message: 'Successfully found contacts!',
-      data: contacts,
+      data: {
+        data,
+        page: pageNum,
+        perPage: perPageNum,
+        totalItems,
+        totalPages,
+        hasPreviousPage,
+        hasNextPage,
+      },
     });
   } catch (error) {
-    res.status(500).json({
-      status: 500,
-      message: 'Error retrieving contacts',
-      error: error.message,
-    });
+    next(error);
   }
 };
 
 export const getContact = async (req, res, next) => {
   const { contactId } = req.params;
-
-  if (!mongoose.Types.ObjectId.isValid(contactId)) {
-    return next(createError(400, 'Invalid contact ID'));
-  }
 
   try {
     const contact = await getContactById(contactId);
@@ -52,11 +67,6 @@ export const getContact = async (req, res, next) => {
 
 export const createContact = async (req, res, next) => {
   const { name, phoneNumber, email, isFavourite, contactType } = req.body;
-  if (!name || !phoneNumber || !contactType) {
-    return next(
-      createError(400, 'Name, phone number, and contact type are required'),
-    );
-  }
 
   try {
     const newContact = await addContact({
@@ -79,10 +89,6 @@ export const createContact = async (req, res, next) => {
 export const updateContact = async (req, res, next) => {
   const { contactId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(contactId)) {
-    return next(createError(400, 'Invalid contact ID'));
-  }
-
   try {
     const updatedContact = await updateExistingContact(contactId, req.body);
     if (!updatedContact) {
@@ -103,10 +109,6 @@ export const updateContact = async (req, res, next) => {
 
 export const deleteContact = async (req, res, next) => {
   const { contactId } = req.params;
-
-  if (!mongoose.Types.ObjectId.isValid(contactId)) {
-    return next(createError(400, 'Invalid contact ID'));
-  }
 
   try {
     const deletedContact = await deleteContactById(contactId);
