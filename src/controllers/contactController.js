@@ -21,7 +21,7 @@ export const getContacts = async (req, res, next) => {
   sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
   try {
-    const { data, totalItems } = await getAllContacts(pageNum, perPageNum);
+    const { data, totalItems } = await getAllContacts(pageNum, perPageNum, sortOptions);
     const totalPages = Math.ceil(totalItems / perPageNum);
     const hasPreviousPage = pageNum > 1;
     const hasNextPage = pageNum < totalPages;
