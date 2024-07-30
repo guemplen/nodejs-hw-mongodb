@@ -1,6 +1,7 @@
 import express from 'express';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
+import authRouter from './routes/authRouter.js';
 import contactsRouter from './routes/contactsRouter.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
@@ -10,6 +11,7 @@ const logger = pino();
 app.use(pinoHttp({ logger }));
 app.use(express.json());
 
+app.use('/auth', authRouter);
 app.use('/contacts', contactsRouter);
 
 app.use(notFoundHandler);

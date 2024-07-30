@@ -9,6 +9,7 @@ import {
 import { ctrlWrapper } from '../middlewares/ctrlWrapper.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { isValidId } from '../middlewares/isValidId.js';
+import { auth } from '../middlewares/auth.js';
 
 const router = express.Router();
 
@@ -49,10 +50,16 @@ const contactSchema = {
   },
 };
 
-router.get('/', ctrlWrapper(getContacts));
-router.get('/:contactId', isValidId, ctrlWrapper(getContact));
-router.post('/', validateBody(contactSchema), ctrlWrapper(createContact));
-router.patch('/:contactId', isValidId, validateBody(contactSchema), ctrlWrapper(updateContact));
-router.delete('/:contactId', isValidId, ctrlWrapper(deleteContact));
+router.get('/', auth, ctrlWrapper(getContacts));
+router.get('/:contactId', auth, isValidId, ctrlWrapper(getContact));
+router.post('/', auth, validateBody(contactSchema), ctrlWrapper(createContact));
+router.patch(
+  '/:contactId',
+  auth,
+  isValidId,
+  validateBody(contactSchema),
+  ctrlWrapper(updateContact),
+);
+router.delete('/:contactId', auth, isValidId, ctrlWrapper(deleteContact));
 
 export default router;
