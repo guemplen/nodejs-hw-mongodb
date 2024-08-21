@@ -4,6 +4,8 @@ import {
   login,
   logout,
   refreshTokens,
+  sendResetEmail,
+  resetPassword,
 } from '../controllers/authController.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { authenticate } from '../middlewares/authMiddleware.js';
@@ -11,9 +13,9 @@ import {
   registrationSchema,
   loginSchema,
   refreshSchema,
+  resetEmailSchema,
+  resetPasswordSchema,
 } from '../validation/authValidation.js';
-import { sendResetEmail } from '../controllers/authController.js';
-import { resetEmailSchema } from '../validation/authValidation.js';
 
 const router = express.Router();
 
@@ -26,5 +28,6 @@ router.post(
   validateBody(resetEmailSchema),
   sendResetEmail,
 );
+router.post('/reset-pwd', validateBody(resetPasswordSchema), resetPassword);
 
 export default router;

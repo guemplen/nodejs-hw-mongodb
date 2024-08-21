@@ -167,14 +167,22 @@ export const sendResetEmail = async (req, res, next) => {
 
     const resetLink = `${process.env.APP_DOMAIN}/reset-password?token=${resetToken}`;
 
-    const transporter = nodemailer.createTransport({
+    const transporterConfig = {
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD,
       },
-    });
+    };
+
+    // console.log('SMTP Configuration:');
+    // console.log('Host:', transporterConfig.host);
+    // console.log('Port:', transporterConfig.port);
+    // console.log('User:', transporterConfig.auth.user);
+    // console.log('Pass:', transporterConfig.auth.pass);
+
+    const transporter = nodemailer.createTransport(transporterConfig);
 
     const mailOptions = {
       from: process.env.SMTP_FROM,
@@ -202,5 +210,38 @@ export const sendResetEmail = async (req, res, next) => {
         ),
       );
     }
+  }
+};
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      throw createError(401, 'Token is expired or invalid.');
+    }
+
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) {
+      throw createError(404, 'User not found!');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    await Session.deleteMany({ userId: user._id });
+
+    res.status(200).json({
+      status: 200,
+      message: 'Password has been successfully reset.',
+      data: {},
+    });
+  } catch (error) {
+    console.error('Error in resetPassword:', error);
+    next(error);
   }
 };
