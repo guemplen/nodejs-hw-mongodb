@@ -21,7 +21,7 @@ export const getContacts = async (req, res, next) => {
   sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
   try {
-    const { data, totalItems } = await getAllContacts(pageNum, perPageNum, sortOptions);
+    const { data, totalItems } = await getAllContacts(req.user.userId, pageNum, perPageNum, sortOptions);
     const totalPages = Math.ceil(totalItems / perPageNum);
     const hasPreviousPage = pageNum > 1;
     const hasNextPage = pageNum < totalPages;
@@ -48,7 +48,7 @@ export const getContact = async (req, res, next) => {
   const { contactId } = req.params;
 
   try {
-    const contact = await getContactById(contactId);
+    const contact = await getContactById(req.user.userId, contactId);
     if (!contact) {
       return res.status(404).json({
         status: 404,
@@ -75,6 +75,7 @@ export const createContact = async (req, res, next) => {
       email,
       isFavourite,
       contactType,
+      userId: req.user.userId,
     });
     res.status(201).json({
       status: 201,
@@ -90,7 +91,7 @@ export const updateContact = async (req, res, next) => {
   const { contactId } = req.params;
 
   try {
-    const updatedContact = await updateExistingContact(contactId, req.body);
+    const updatedContact = await updateExistingContact(req.user.userId, contactId, req.body);
     if (!updatedContact) {
       return res.status(404).json({
         status: 404,
@@ -111,7 +112,7 @@ export const deleteContact = async (req, res, next) => {
   const { contactId } = req.params;
 
   try {
-    const deletedContact = await deleteContactById(contactId);
+    const deletedContact = await deleteContactById(req.user.userId, contactId);
     if (!deletedContact) {
       throw createError(404, 'Contact not found');
     }

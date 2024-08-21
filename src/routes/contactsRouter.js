@@ -9,6 +9,7 @@ import {
 import { ctrlWrapper } from '../middlewares/ctrlWrapper.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { isValidId } from '../middlewares/isValidId.js';
+import { authenticate } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -48,6 +49,8 @@ const contactSchema = {
     optional: { options: { nullable: true } },
   },
 };
+
+router.use(authenticate);
 
 router.get('/', ctrlWrapper(getContacts));
 router.get('/:contactId', isValidId, ctrlWrapper(getContact));
