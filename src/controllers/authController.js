@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import createError from 'http-errors';
 import User from '../models/user.js';
 import Session from '../models/session.js';
+import nodemailer from 'nodemailer';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 const JWT_EXPIRATION = '1h';
@@ -19,7 +20,11 @@ export const register = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({ name, email, password: hashedPassword });
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
 
     res.status(201).json({
       status: 201,
@@ -31,6 +36,7 @@ export const register = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error('Error in register:', error);
     next(error);
   }
 };
@@ -49,8 +55,12 @@ export const login = async (req, res, next) => {
       throw createError(401, 'Invalid email or password');
     }
 
-    const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
-    const refreshToken = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: REFRESH_EXPIRATION });
+    const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
+      expiresIn: JWT_EXPIRATION,
+    });
+    const refreshToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
+      expiresIn: REFRESH_EXPIRATION,
+    });
 
     const session = new Session({
       userId: user._id,
@@ -61,8 +71,14 @@ export const login = async (req, res, next) => {
     });
     await session.save();
 
-    res.cookie('sessionId', session._id, { httpOnly: true, secure: true });
-    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
+    res.cookie('sessionId', session._id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
+    });
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
+    });
 
     res.status(200).json({
       status: 200,
@@ -73,6 +89,7 @@ export const login = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error('Error in login:', error);
     next(error);
   }
 };
@@ -87,6 +104,7 @@ export const logout = async (req, res, next) => {
 
     res.status(204).send();
   } catch (error) {
+    console.error('Error in logout:', error);
     next(error);
   }
 };
@@ -100,16 +118,25 @@ export const refreshTokens = async (req, res, next) => {
       throw createError(401, 'Invalid or expired refresh token');
     }
 
-    const accessToken = jwt.sign({ userId: session.userId }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
-    const newRefreshToken = jwt.sign({ userId: session.userId }, JWT_SECRET, { expiresIn: REFRESH_EXPIRATION });
+    const accessToken = jwt.sign({ userId: session.userId }, JWT_SECRET, {
+      expiresIn: JWT_EXPIRATION,
+    });
+    const newRefreshToken = jwt.sign({ userId: session.userId }, JWT_SECRET, {
+      expiresIn: REFRESH_EXPIRATION,
+    });
 
     session.accessToken = accessToken;
     session.refreshToken = newRefreshToken;
     session.accessTokenValidUntil = new Date(Date.now() + 60 * 60 * 1000);
-    session.refreshTokenValidUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    session.refreshTokenValidUntil = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000,
+    );
     await session.save();
 
-    res.cookie('refreshToken', newRefreshToken, { httpOnly: true, secure: true });
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
+    });
 
     res.status(200).json({
       status: 200,
@@ -120,6 +147,60 @@ export const refreshTokens = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error('Error in refreshTokens:', error);
     next(error);
+  }
+};
+
+export const sendResetEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      throw createError(404, 'User not found!');
+    }
+
+    const resetToken = jwt.sign({ email: user.email }, JWT_SECRET, {
+      expiresIn: '5m',
+    });
+
+    const resetLink = `${process.env.APP_DOMAIN}/reset-password?token=${resetToken}`;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM,
+      to: user.email,
+      subject: 'Password Reset Request',
+      html: `<p>To reset your password, please click the link below:</p><a href="${resetLink}">${resetLink}</a>`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({
+      status: 200,
+      message: 'Reset password email has been successfully sent.',
+      data: {},
+    });
+  } catch (error) {
+    if (error.status === 404) {
+      next(error);
+    } else {
+      console.error('Error sending email:', error);
+      next(
+        createError(
+          500,
+          `Failed to send the email, please try again later. Error: ${error.message}`,
+        ),
+      );
+    }
   }
 };
