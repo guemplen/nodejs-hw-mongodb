@@ -66,14 +66,25 @@ export const refreshSchema = {
         },
       },
     },
-  };
-  
+};
+
   export const logoutSchema = {
     authorization: {
       in: ['headers'],
       notEmpty: {
         errorMessage: 'Access token is required',
       },
-    },
-  };
+  },
+};
 
+export const resetEmailSchema = {
+  email: {
+    in: ['body'],
+    isEmail: {
+      errorMessage: 'Please provide a valid email address',
+    },
+    notEmpty: {
+      errorMessage: 'Email is required',
+    },
+  },
+};
