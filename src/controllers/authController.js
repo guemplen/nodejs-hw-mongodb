@@ -61,6 +61,9 @@ export const login = async (req, res, next) => {
     });
     await session.save();
 
+    res.cookie('sessionId', session._id, { httpOnly: true, secure: true });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
+
     res.status(200).json({
       status: 200,
       message: 'Login successful',
@@ -79,6 +82,9 @@ export const logout = async (req, res, next) => {
     const { userId } = req.user;
     await Session.deleteMany({ userId });
 
+    res.clearCookie('sessionId');
+    res.clearCookie('refreshToken');
+
     res.status(204).send();
   } catch (error) {
     next(error);
@@ -87,7 +93,7 @@ export const logout = async (req, res, next) => {
 
 export const refreshTokens = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
+    const { refreshToken } = req.cookies;
 
     const session = await Session.findOne({ refreshToken });
     if (!session || new Date() > session.refreshTokenValidUntil) {
@@ -102,6 +108,8 @@ export const refreshTokens = async (req, res, next) => {
     session.accessTokenValidUntil = new Date(Date.now() + 60 * 60 * 1000);
     session.refreshTokenValidUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await session.save();
+
+    res.cookie('refreshToken', newRefreshToken, { httpOnly: true, secure: true });
 
     res.status(200).json({
       status: 200,
