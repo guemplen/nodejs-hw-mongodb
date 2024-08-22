@@ -77,3 +77,33 @@ export const logoutSchema = {
   // },
 };
 
+export const resetEmailSchema = {
+  email: {
+    in: ['body'],
+    isEmail: {
+      errorMessage: 'Please provide a valid email address',
+    },
+    notEmpty: {
+      errorMessage: 'Email is required',
+    },
+  },
+};
+
+export const resetPasswordSchema = {
+  token: {
+    in: ['body'],
+    notEmpty: {
+      errorMessage: 'Token is required',
+    },
+  },
+  password: {
+    in: ['body'],
+    isLength: {
+      options: { min: 6 },
+      errorMessage: 'Password must be at least 6 characters long',
+    },
+    notEmpty: {
+      errorMessage: 'Password is required',
+    },
+  },
+};
