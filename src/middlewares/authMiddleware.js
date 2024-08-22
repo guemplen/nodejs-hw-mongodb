@@ -6,24 +6,25 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 export const authenticate = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const sessionId = req.cookies.sessionId;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next(createError(401, 'Authorization header missing or malformed'));
+    console.log('Received sessionId from cookies:', sessionId);
+
+    if (!sessionId) {
+      return next(createError(401, 'Authorization token missing or malformed'));
     }
 
-    const token = authHeader.split(' ')[1];
+    const session = await Session.findById(sessionId);
+    if (!session || new Date() > session.accessTokenValidUntil) {
+      return next(createError(401, 'Session expired or invalid'));
+    }
 
     let decoded;
     try {
-      decoded = jwt.verify(token, JWT_SECRET);
+      decoded = jwt.verify(session.accessToken, JWT_SECRET);
     } catch (err) {
+      console.error('Error verifying accessToken:', err.message);
       return next(createError(401, 'Invalid or expired token'));
-    }
-
-    const session = await Session.findOne({ accessToken: token });
-    if (!session || new Date() > session.accessTokenValidUntil) {
-      return next(createError(401, 'Session expired or invalid'));
     }
 
     if (!decoded || !decoded.userId) {
@@ -33,6 +34,7 @@ export const authenticate = async (req, res, next) => {
     req.user = { userId: decoded.userId };
     next();
   } catch (error) {
+    console.error('Error in authenticate middleware:', error);
     next(error);
   }
 };

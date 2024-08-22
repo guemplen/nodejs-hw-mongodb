@@ -82,10 +82,9 @@ export const login = async (req, res, next) => {
 
     res.status(200).json({
       status: 200,
-      message: 'Login successful',
+      message: 'Successfully logged in an user!',
       data: {
         accessToken,
-        refreshToken,
       },
     });
   } catch (error) {
@@ -94,24 +93,21 @@ export const login = async (req, res, next) => {
   }
 };
 
-export const logout = async (req, res, next) => {
-  try {
-    const { userId } = req.user;
-    await Session.deleteMany({ userId });
-
-    res.clearCookie('sessionId');
-    res.clearCookie('refreshToken');
-
-    res.status(204).send();
-  } catch (error) {
-    console.error('Error in logout:', error);
-    next(error);
-  }
-};
-
 export const refreshTokens = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      throw createError(400, 'Refresh token is missing');
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, JWT_SECRET);
+    } catch (err) {
+      console.error('Error verifying refreshToken:', err.message);
+      throw createError(401, 'Invalid or expired refresh token');
+    }
 
     const session = await Session.findOne({ refreshToken });
     if (!session || new Date() > session.refreshTokenValidUntil) {
@@ -143,11 +139,29 @@ export const refreshTokens = async (req, res, next) => {
       message: 'Tokens refreshed successfully',
       data: {
         accessToken,
-        refreshToken: newRefreshToken,
       },
     });
   } catch (error) {
     console.error('Error in refreshTokens:', error);
+    next(error);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    const { sessionId } = req.cookies;
+    if (!sessionId) {
+      throw createError(400, 'Session ID is missing');
+    }
+
+    await Session.findByIdAndDelete(sessionId);
+
+    res.clearCookie('sessionId');
+    res.clearCookie('refreshToken');
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error in logout:', error);
     next(error);
   }
 };
@@ -217,10 +231,16 @@ export const resetPassword = async (req, res, next) => {
   try {
     const { token, password } = req.body;
 
+    // Логируем полученный токен
+    console.log('Received reset token:', token);
+
     let decoded;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
+      // Логируем успешную верификацию
+      console.log('Decoded token:', decoded);
     } catch (err) {
+      console.error('Error verifying reset token:', err.message);
       throw createError(401, 'Token is expired or invalid.');
     }
 
@@ -233,6 +253,7 @@ export const resetPassword = async (req, res, next) => {
     user.password = hashedPassword;
     await user.save();
 
+    // Удаляем все сессии пользователя после смены пароля
     await Session.deleteMany({ userId: user._id });
 
     res.status(200).json({

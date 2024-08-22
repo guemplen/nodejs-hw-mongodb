@@ -52,29 +52,29 @@ export const loginSchema = {
 };
 
 export const refreshSchema = {
-  refreshToken: {
-    in: ['body'],
-    notEmpty: {
-      errorMessage: 'Refresh token is required',
-    },
-    custom: {
-      options: (value) => {
-        if (typeof value !== 'string') {
-          throw new Error('Refresh token must be a string');
-        }
-        return true;
-      },
-    },
-  },
+  // refreshToken: {
+  //   in: ['body'],
+  //   notEmpty: {
+  //     errorMessage: 'Refresh token is required',
+  //   },
+  //   custom: {
+  //     options: (value) => {
+  //       if (typeof value !== 'string') {
+  //         throw new Error('Refresh token must be a string');
+  //       }
+  //       return true;
+  //     },
+  //   },
+  // },
 };
 
 export const logoutSchema = {
-  authorization: {
-    in: ['headers'],
-    notEmpty: {
-      errorMessage: 'Access token is required',
-    },
-  },
+  // authorization: {
+  //   in: ['headers'],
+  //   notEmpty: {
+  //     errorMessage: 'Access token is required',
+  //   },
+  // },
 };
 
 export const resetEmailSchema = {
