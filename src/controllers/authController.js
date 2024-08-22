@@ -19,7 +19,11 @@ export const register = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({ name, email, password: hashedPassword });
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
 
     res.status(201).json({
       status: 201,
@@ -49,8 +53,12 @@ export const login = async (req, res, next) => {
       throw createError(401, 'Invalid email or password');
     }
 
-    const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
-    const refreshToken = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: REFRESH_EXPIRATION });
+    const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
+      expiresIn: JWT_EXPIRATION,
+    });
+    const refreshToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
+      expiresIn: REFRESH_EXPIRATION,
+    });
 
     const session = new Session({
       userId: user._id,
@@ -66,27 +74,13 @@ export const login = async (req, res, next) => {
 
     res.status(200).json({
       status: 200,
-      message: 'Login successful',
+      message: 'Successfully logged in an user!',
       data: {
         accessToken,
-        refreshToken,
       },
     });
   } catch (error) {
-    next(error);
-  }
-};
-
-export const logout = async (req, res, next) => {
-  try {
-    const { userId } = req.user;
-    await Session.deleteMany({ userId });
-
-    res.clearCookie('sessionId');
-    res.clearCookie('refreshToken');
-
-    res.status(204).send();
-  } catch (error) {
+    console.error('Error in login:', error);
     next(error);
   }
 };
@@ -95,31 +89,77 @@ export const refreshTokens = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
 
-    const session = await Session.findOne({ refreshToken });
-    if (!session || new Date() > session.refreshTokenValidUntil) {
+    if (!refreshToken) {
+      throw createError(400, 'Refresh token is missing');
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, JWT_SECRET);
+    } catch (err) {
+      console.error('Error verifying refreshToken:', err.message);
       throw createError(401, 'Invalid or expired refresh token');
     }
 
-    const accessToken = jwt.sign({ userId: session.userId }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
-    const newRefreshToken = jwt.sign({ userId: session.userId }, JWT_SECRET, { expiresIn: REFRESH_EXPIRATION });
+    const session = await Session.findOne({ refreshToken });
+    if (!session) {
+      throw createError(401, 'Invalid or expired refresh token');
+    }
+
+    const accessToken = jwt.sign({ userId: session.userId }, JWT_SECRET, {
+      expiresIn: JWT_EXPIRATION,
+    });
+    const newRefreshToken = jwt.sign({ userId: session.userId }, JWT_SECRET, {
+      expiresIn: REFRESH_EXPIRATION,
+    });
 
     session.accessToken = accessToken;
     session.refreshToken = newRefreshToken;
     session.accessTokenValidUntil = new Date(Date.now() + 60 * 60 * 1000);
-    session.refreshTokenValidUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    session.refreshTokenValidUntil = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000,
+    );
     await session.save();
 
-    res.cookie('refreshToken', newRefreshToken, { httpOnly: true, secure: true });
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+    });
 
     res.status(200).json({
       status: 200,
       message: 'Tokens refreshed successfully',
       data: {
         accessToken,
-        refreshToken: newRefreshToken,
       },
     });
   } catch (error) {
+    console.error('Error in refreshTokens:', error);
+    next(error);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    const { sessionId } = req.cookies;
+
+    if (!sessionId) {
+      return next(createError(401, 'Session ID is missing'));
+    }
+
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return next(createError(401, 'Session not found or already expired'));
+    }
+
+    await Session.deleteOne({ _id: sessionId });
+
+    res.clearCookie('sessionId');
+    res.clearCookie('refreshToken');
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error in logout:', error);
     next(error);
   }
 };

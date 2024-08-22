@@ -34,46 +34,45 @@ export const registrationSchema = {
 };
 
 export const loginSchema = {
-    email: {
-      in: ['body'],
-      isEmail: {
-        errorMessage: 'Please provide a valid email address',
-      },
-      notEmpty: {
-        errorMessage: 'Email is required',
-      },
+  email: {
+    in: ['body'],
+    isEmail: {
+      errorMessage: 'Please provide a valid email address',
     },
-    password: {
-      in: ['body'],
-      notEmpty: {
-        errorMessage: 'Password is required',
-      },
+    notEmpty: {
+      errorMessage: 'Email is required',
     },
+  },
+  password: {
+    in: ['body'],
+    notEmpty: {
+      errorMessage: 'Password is required',
+    },
+  },
 };
 
 export const refreshSchema = {
-    refreshToken: {
-      in: ['body'],
-      notEmpty: {
-        errorMessage: 'Refresh token is required',
-      },
-      custom: {
-        options: (value) => {
-          if (typeof value !== 'string') {
-            throw new Error('Refresh token must be a string');
-          }
-          return true;
-        },
-      },
-    },
-  };
-  
-  export const logoutSchema = {
-    authorization: {
-      in: ['headers'],
-      notEmpty: {
-        errorMessage: 'Access token is required',
-      },
-    },
-  };
+  // refreshToken: {
+  //   in: ['body'],
+  //   notEmpty: {
+  //     errorMessage: 'Refresh token is required',
+  //   },
+  //   custom: {
+  //     options: (value) => {
+  //       if (typeof value !== 'string') {
+  //         throw new Error('Refresh token must be a string');
+  //       }
+  //       return true;
+  //     },
+  //   },
+  // },
+};
 
+export const logoutSchema = {
+  // authorization: {
+  //   in: ['headers'],
+  //   notEmpty: {
+  //     errorMessage: 'Access token is required',
+  //   },
+  // },
+};
