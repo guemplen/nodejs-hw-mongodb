@@ -1,3 +1,5 @@
+import cloudinary from '../config/cloudinary.js';
+import fs from 'fs/promises';
 import {
   getAllContacts,
   getContactById,
@@ -8,7 +10,12 @@ import {
 import createError from 'http-errors';
 
 export const getContacts = async (req, res, next) => {
-  const { page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc' } = req.query;
+  const {
+    page = 1,
+    perPage = 10,
+    sortBy = 'name',
+    sortOrder = 'asc',
+  } = req.query;
 
   const pageNum = parseInt(page);
   const perPageNum = parseInt(perPage);
@@ -21,7 +28,12 @@ export const getContacts = async (req, res, next) => {
   sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
   try {
-    const { data, totalItems } = await getAllContacts(req.user.userId, pageNum, perPageNum, sortOptions);
+    const { data, totalItems } = await getAllContacts(
+      req.user.userId,
+      pageNum,
+      perPageNum,
+      sortOptions,
+    );
     const totalPages = Math.ceil(totalItems / perPageNum);
     const hasPreviousPage = pageNum > 1;
     const hasNextPage = pageNum < totalPages;
@@ -40,6 +52,7 @@ export const getContacts = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error('Error in getContacts:', error);
     next(error);
   }
 };
@@ -61,12 +74,27 @@ export const getContact = async (req, res, next) => {
       data: contact,
     });
   } catch (error) {
+    console.error('Error in getContact:', error);
     next(error);
   }
 };
 
 export const createContact = async (req, res, next) => {
   const { name, phoneNumber, email, isFavourite, contactType } = req.body;
+
+  let photoUrl = '';
+  if (req.file) {
+    try {
+      // console.log('Uploading photo to Cloudinary...');
+      const result = await cloudinary.uploader.upload(req.file.path);
+      photoUrl = result.secure_url;
+      // console.log('Photo uploaded successfully:', photoUrl);
+      await fs.unlink(req.file.path);
+    } catch (error) {
+      // console.error('Error uploading photo to Cloudinary:', error);
+      return next(createError(500, 'Failed to upload image to Cloudinary'));
+    }
+  }
 
   try {
     const newContact = await addContact({
@@ -76,6 +104,7 @@ export const createContact = async (req, res, next) => {
       isFavourite,
       contactType,
       userId: req.user.userId,
+      photo: photoUrl,
     });
     res.status(201).json({
       status: 201,
@@ -83,6 +112,7 @@ export const createContact = async (req, res, next) => {
       data: newContact,
     });
   } catch (error) {
+    console.error('Error in createContact:', error);
     next(error);
   }
 };
@@ -90,8 +120,31 @@ export const createContact = async (req, res, next) => {
 export const updateContact = async (req, res, next) => {
   const { contactId } = req.params;
 
+  let photoUrl = '';
+  if (req.file) {
+    try {
+      // console.log('Uploading updated photo to Cloudinary...');
+      const result = await cloudinary.uploader.upload(req.file.path);
+      photoUrl = result.secure_url;
+      // console.log('Updated photo uploaded successfully:', photoUrl);
+      await fs.unlink(req.file.path);
+    } catch (error) {
+      // console.error('Error uploading updated photo to Cloudinary:', error);
+      return next(createError(500, 'Failed to upload image to Cloudinary'));
+    }
+  }
+
+  const updateData = { ...req.body };
+  if (photoUrl) {
+    updateData.photo = photoUrl;
+  }
+
   try {
-    const updatedContact = await updateExistingContact(req.user.userId, contactId, req.body);
+    const updatedContact = await updateExistingContact(
+      req.user.userId,
+      contactId,
+      updateData,
+    );
     if (!updatedContact) {
       return res.status(404).json({
         status: 404,
@@ -100,10 +153,11 @@ export const updateContact = async (req, res, next) => {
     }
     res.status(200).json({
       status: 200,
-      message: 'Successfully patched a contact!',
+      message: 'Successfully updated contact!',
       data: updatedContact,
     });
   } catch (error) {
+    console.error('Error in updateContact:', error);
     next(error);
   }
 };
@@ -118,6 +172,7 @@ export const deleteContact = async (req, res, next) => {
     }
     res.status(204).send();
   } catch (error) {
+    console.error('Error in deleteContact:', error);
     next(error);
   }
 };
