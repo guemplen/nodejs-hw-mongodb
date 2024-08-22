@@ -231,14 +231,9 @@ export const resetPassword = async (req, res, next) => {
   try {
     const { token, password } = req.body;
 
-    // Логируем полученный токен
-    console.log('Received reset token:', token);
-
     let decoded;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
-      // Логируем успешную верификацию
-      console.log('Decoded token:', decoded);
     } catch (err) {
       console.error('Error verifying reset token:', err.message);
       throw createError(401, 'Token is expired or invalid.');
@@ -253,7 +248,6 @@ export const resetPassword = async (req, res, next) => {
     user.password = hashedPassword;
     await user.save();
 
-    // Удаляем все сессии пользователя после смены пароля
     await Session.deleteMany({ userId: user._id });
 
     res.status(200).json({
