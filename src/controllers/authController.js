@@ -85,6 +85,32 @@ export const login = async (req, res, next) => {
   }
 };
 
+export const logout = async (req, res, next) => {
+  try {
+    const { sessionId } = req.cookies;
+
+    if (!sessionId) {
+      return next(createError(401, 'Session ID is missing'));
+    }
+
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return next(createError(401, 'Session not found or already expired'));
+    }
+
+    await Session.deleteOne({ _id: sessionId });
+
+    res.clearCookie('sessionId');
+    res.clearCookie('refreshToken');
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error in logout:', error);
+    next(error);
+  }
+};
+
+
 export const refreshTokens = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
@@ -139,27 +165,3 @@ export const refreshTokens = async (req, res, next) => {
   }
 };
 
-export const logout = async (req, res, next) => {
-  try {
-    const { sessionId } = req.cookies;
-
-    if (!sessionId) {
-      return next(createError(401, 'Session ID is missing'));
-    }
-
-    const session = await Session.findById(sessionId);
-    if (!session) {
-      return next(createError(401, 'Session not found or already expired'));
-    }
-
-    await Session.deleteOne({ _id: sessionId });
-
-    res.clearCookie('sessionId');
-    res.clearCookie('refreshToken');
-
-    res.status(204).send();
-  } catch (error) {
-    console.error('Error in logout:', error);
-    next(error);
-  }
-};
