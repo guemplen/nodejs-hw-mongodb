@@ -6,13 +6,17 @@ import authRouter from './routes/auth.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import cookieParser from 'cookie-parser';
+import multer from 'multer';
 
 const app = express();
 const logger = pino();
 
-app.use(pinoHttp({ logger }));
 app.use(express.json());
+app.use(pinoHttp({ logger }));
 app.use(cookieParser());
+
+const upload = multer();
+app.use(upload.any());
 
 app.use('/contacts', contactsRouter);
 app.use('/auth', authRouter);

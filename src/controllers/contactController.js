@@ -85,13 +85,10 @@ export const createContact = async (req, res, next) => {
   let photoUrl = '';
   if (req.file) {
     try {
-      // console.log('Uploading photo to Cloudinary...');
       const result = await cloudinary.uploader.upload(req.file.path);
       photoUrl = result.secure_url;
-      // console.log('Photo uploaded successfully:', photoUrl);
       await fs.unlink(req.file.path);
     } catch (error) {
-      // console.error('Error uploading photo to Cloudinary:', error);
       return next(createError(500, 'Failed to upload image to Cloudinary'));
     }
   }
@@ -112,8 +109,7 @@ export const createContact = async (req, res, next) => {
       data: newContact,
     });
   } catch (error) {
-    console.error('Error in createContact:', error);
-    next(error);
+    next(createError(500, 'Failed to create contact'));
   }
 };
 
@@ -123,13 +119,10 @@ export const updateContact = async (req, res, next) => {
   let photoUrl = '';
   if (req.file) {
     try {
-      // console.log('Uploading updated photo to Cloudinary...');
       const result = await cloudinary.uploader.upload(req.file.path);
       photoUrl = result.secure_url;
-      // console.log('Updated photo uploaded successfully:', photoUrl);
       await fs.unlink(req.file.path);
     } catch (error) {
-      // console.error('Error uploading updated photo to Cloudinary:', error);
       return next(createError(500, 'Failed to upload image to Cloudinary'));
     }
   }
