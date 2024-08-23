@@ -1,7 +1,6 @@
 /node_modules
 
 .env
-.env_old
 
 .vscode
 .DS_Store
