@@ -9,10 +9,6 @@ const cloudinaryConfig = {
   api_secret: process.env.CLOUDINARY_API_SECRET,
 };
 
-console.log('Cloudinary Configuration:');
-console.log('Cloud Name:', cloudinaryConfig.cloud_name);
-console.log('API Key:', cloudinaryConfig.api_key);
-
 cloudinary.v2.config(cloudinaryConfig);
 
 try {

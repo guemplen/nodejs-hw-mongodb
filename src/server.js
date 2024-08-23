@@ -6,7 +6,15 @@ import authRouter from './routes/auth.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import cookieParser from 'cookie-parser';
-import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+export const TEMP_UPLOAD_DIR = path.join(process.cwd(), 'temp');
+export const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+
+if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
+  fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true });
+}
 
 const app = express();
 const logger = pino();
@@ -14,9 +22,6 @@ const logger = pino();
 app.use(express.json());
 app.use(pinoHttp({ logger }));
 app.use(cookieParser());
-
-const upload = multer();
-app.use(upload.any());
 
 app.use('/contacts', contactsRouter);
 app.use('/auth', authRouter);
