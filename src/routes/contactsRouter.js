@@ -1,5 +1,4 @@
 import express from 'express';
-import multer from 'multer';
 import {
   getContacts,
   getContact,
@@ -11,9 +10,9 @@ import { ctrlWrapper } from '../middlewares/ctrlWrapper.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { isValidId } from '../middlewares/isValidId.js';
 import { authenticate } from '../middlewares/authMiddleware.js';
+import { upload } from '../middlewares/multer.js';
 
 const router = express.Router();
-const upload = multer({ dest: 'uploads/' });
 
 const contactSchema = {};
 
