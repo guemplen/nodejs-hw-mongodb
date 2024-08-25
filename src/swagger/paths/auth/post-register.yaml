@@ -1,0 +1,47 @@
+tags:
+  - Auth
+summary: User register
+operationId: registerUser
+description: Register a new user with name, email, and password.
+security:
+  - bearerAuth: []
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          name:
+            type: string
+            example: 'John Doe'
+          email:
+            type: string
+            format: email
+            example: 'john.doe@example.com'
+          password:
+            type: string
+            format: password
+            example: 'SecurePassword123'
+        required:
+          - name
+          - email
+          - password
+responses:
+  '201':
+    description: Successfully registered the user
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: integer
+              example: 201
+            message:
+              type: string
+              example: 'Successfully registered a user!'
+  '400':
+    description: Bad request (missing fields or invalid input)
+  '500':
+    description: Internal server error

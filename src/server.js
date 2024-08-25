@@ -8,9 +8,11 @@ import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import fs from 'fs';
+import { swaggerDocs } from './middlewares/swaggerDocs.js';
 
 export const TEMP_UPLOAD_DIR = path.join(process.cwd(), 'temp');
 export const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+export const SWAGGER_PATH = path.join(process.cwd(), 'docs', 'swagger.json');
 
 if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
   fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true });
@@ -25,6 +27,7 @@ app.use(cookieParser());
 
 app.use('/contacts', contactsRouter);
 app.use('/auth', authRouter);
+app.use('/api-docs', swaggerDocs());
 
 app.use(notFoundHandler);
 app.use(errorHandler);
