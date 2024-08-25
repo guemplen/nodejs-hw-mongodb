@@ -1,0 +1,63 @@
+tags:
+  - Contacts
+summary: Create a contact
+operationId: createContact
+description: Creates a new contact with the provided details. Requires authorization via Bearer token.
+security:
+  - bearerAuth: []
+requestBody:
+  required: true
+  content:
+    multipart/form-data:
+      schema:
+        type: object
+        properties:
+          name:
+            type: string
+            example: 'John Doe'
+          phoneNumber:
+            type: string
+            example: '+1234567890'
+          email:
+            type: string
+            example: 'john.doe@example.com'
+          photo:
+            type: string
+            format: binary
+            description: The photo to associate with the contact
+responses:
+  '201':
+    description: Successfully created the contact
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: integer
+              example: 201
+            message:
+              type: string
+              example: 'Successfully created a contact!'
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: '609c1a5e1c4ae01a10d12345'
+                name:
+                  type: string
+                  example: 'John Doe'
+                phoneNumber:
+                  type: string
+                  example: '+1234567890'
+                email:
+                  type: string
+                  example: 'john.doe@example.com'
+                photo:
+                  type: string
+                  example: 'https://example.com/photo.jpg'
+  '401':
+    description: Unauthorized
+  '500':
+    description: Internal server error

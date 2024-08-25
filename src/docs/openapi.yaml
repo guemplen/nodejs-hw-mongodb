@@ -1,0 +1,44 @@
+openapi: 3.1.0
+info:
+  version: 1.0.0
+  title: Contact Manager API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  description: API for managing contacts including creation, update, deletion, listing, password reset, and photo management.
+tags:
+  - name: Contacts
+    description: API for managing contacts
+servers:
+  - url: http://localhost:3000
+  - url: https://get-contacts-app.onrender.com
+paths:
+  /contacts:
+    get:
+      $ref: '../swagger/paths/contacts/get.yaml'
+    post:
+      $ref: '../swagger/paths/contacts/post.yaml'
+  /contacts/{contactId}:
+    get:
+      $ref: '../swagger/paths/contacts/{id}/get.yaml'
+    patch:
+      $ref: '../swagger/paths/contacts/{id}/patch.yaml'
+    delete:
+      $ref: '../swagger/paths/contacts/{id}/delete.yaml'
+  /auth/register:
+    post:
+      $ref: '../swagger/paths/auth/post-register.yaml'
+  /auth/login:
+    post:
+      $ref: '../swagger/paths/auth/post-login.yaml'
+  /auth/refresh:
+    post:
+      $ref: '../swagger/paths/auth/post-refresh.yaml'
+  /auth/logout:
+    post:
+      $ref: '../swagger/paths/auth/post-logout.yaml'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

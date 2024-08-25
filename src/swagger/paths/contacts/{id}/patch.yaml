@@ -1,0 +1,72 @@
+tags:
+  - ContactId
+summary: Update contact by ID
+operationId: updateContact
+description: Updates the details of an existing contact specified by its unique ID. Requires authorization via Bearer token.
+security:
+  - bearerAuth: []
+parameters:
+  - in: path
+    name: contactId
+    required: true
+    schema:
+      type: string
+    description: The unique identifier of the contact
+requestBody:
+  required: true
+  content:
+    multipart/form-data:
+      schema:
+        type: object
+        properties:
+          name:
+            type: string
+            example: 'John Doe'
+          phoneNumber:
+            type: string
+            example: '+1234567890'
+          email:
+            type: string
+            example: 'john.doe@example.com'
+          photo:
+            type: string
+            format: binary
+            description: The photo to update
+responses:
+  '200':
+    description: Successfully updated the contact
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: 'Successfully patched a contact!'
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: '609c1a5e1c4ae01a10d12345'
+                name:
+                  type: string
+                  example: 'John Doe'
+                phoneNumber:
+                  type: string
+                  example: '+1234567890'
+                email:
+                  type: string
+                  example: 'john.doe@example.com'
+                photo:
+                  type: string
+                  example: 'https://example.com/photo.jpg'
+  '404':
+    description: Contact not found
+  '401':
+    description: Unauthorized
+  '500':
+    description: Internal server error
