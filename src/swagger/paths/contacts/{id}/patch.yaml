@@ -1,5 +1,5 @@
 tags:
-  - ContactId
+  - Contacts
 summary: Update contact by ID
 operationId: updateContact
 description: Updates the details of an existing contact specified by its unique ID. Requires authorization via Bearer token.
@@ -22,16 +22,34 @@ requestBody:
           name:
             type: string
             example: 'John Doe'
+            description: The name of the contact
+            required: false
           phoneNumber:
             type: string
             example: '+1234567890'
+            description: The phone number of the contact
+            required: false
+          contactType:
+            type: string
+            example: 'personal'
+            enum: [work, home, personal]
+            description: The type of contact (work, home, or personal)
+            required: false
           email:
             type: string
             example: 'john.doe@example.com'
+            description: The email address of the contact
+            required: false
+          isFavourite:
+            type: boolean
+            example: false
+            description: Indicates whether the contact is marked as a favorite
+            required: false
           photo:
             type: string
             format: binary
-            description: The photo to update
+            description: The photo to update for the contact
+            required: false
 responses:
   '200':
     description: Successfully updated the contact
@@ -58,9 +76,15 @@ responses:
                 phoneNumber:
                   type: string
                   example: '+1234567890'
+                contactType:
+                  type: string
+                  example: 'personal'
                 email:
                   type: string
                   example: 'john.doe@example.com'
+                isFavourite:
+                  type: boolean
+                  example: false
                 photo:
                   type: string
                   example: 'https://example.com/photo.jpg'
