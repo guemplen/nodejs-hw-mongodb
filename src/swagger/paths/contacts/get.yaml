@@ -20,6 +20,21 @@ parameters:
       type: integer
       default: 10
     description: The number of contacts to retrieve per page.
+  - in: query
+    name: sortBy
+    required: false
+    schema:
+      type: string
+      default: name
+    description: The field by which to sort the contacts (e.g., name, email, phoneNumber).
+  - in: query
+    name: sortOrder
+    required: false
+    schema:
+      type: string
+      enum: [asc, desc]
+      default: asc
+    description: The order in which to sort the results. `asc` for ascending (default) or `desc` for descending.
 responses:
   '200':
     description: Successfully retrieved contacts

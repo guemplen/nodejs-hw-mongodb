@@ -57,6 +57,30 @@
               "default": 10
             },
             "description": "The number of contacts to retrieve per page."
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "name"
+            },
+            "description": "The field by which to sort the contacts (e.g., name, email, phoneNumber)."
+          },
+          {
+            "in": "query",
+            "name": "sortOrder",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "asc"
+            },
+            "description": "The order in which to sort the results. `asc` for ascending (default) or `desc` for descending."
           }
         ],
         "responses": {
@@ -166,20 +190,44 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "example": "John Doe"
+                    "example": "John Doe",
+                    "description": "The name of the contact",
+                    "required": true
                   },
                   "phoneNumber": {
                     "type": "string",
-                    "example": "+1234567890"
+                    "example": "+1234567890",
+                    "description": "The phone number of the contact",
+                    "required": true
+                  },
+                  "contactType": {
+                    "type": "string",
+                    "example": "personal",
+                    "enum": [
+                      "work",
+                      "home",
+                      "personal"
+                    ],
+                    "description": "The type of contact (work, home, or personal)",
+                    "required": true
                   },
                   "email": {
                     "type": "string",
-                    "example": "john.doe@example.com"
+                    "example": "john.doe@example.com",
+                    "description": "The email address of the contact",
+                    "required": false
+                  },
+                  "isFavourite": {
+                    "type": "boolean",
+                    "example": false,
+                    "description": "Indicates whether the contact is marked as a favorite",
+                    "required": false
                   },
                   "photo": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The photo to associate with the contact"
+                    "description": "The photo to associate with the contact",
+                    "required": false
                   }
                 }
               }
@@ -217,9 +265,17 @@
                           "type": "string",
                           "example": "+1234567890"
                         },
+                        "contactType": {
+                          "type": "string",
+                          "example": "personal"
+                        },
                         "email": {
                           "type": "string",
                           "example": "john.doe@example.com"
+                        },
+                        "isFavourite": {
+                          "type": "boolean",
+                          "example": false
                         },
                         "photo": {
                           "type": "string",
@@ -244,7 +300,7 @@
     "/contacts/{contactId}": {
       "get": {
         "tags": [
-          "ContactId"
+          "Contacts"
         ],
         "summary": "Contact by ID",
         "operationId": "getContactById",
@@ -335,7 +391,7 @@
       },
       "patch": {
         "tags": [
-          "ContactId"
+          "Contacts"
         ],
         "summary": "Update contact by ID",
         "operationId": "updateContact",
@@ -365,20 +421,44 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "example": "John Doe"
+                    "example": "John Doe",
+                    "description": "The name of the contact",
+                    "required": false
                   },
                   "phoneNumber": {
                     "type": "string",
-                    "example": "+1234567890"
+                    "example": "+1234567890",
+                    "description": "The phone number of the contact",
+                    "required": false
+                  },
+                  "contactType": {
+                    "type": "string",
+                    "example": "personal",
+                    "enum": [
+                      "work",
+                      "home",
+                      "personal"
+                    ],
+                    "description": "The type of contact (work, home, or personal)",
+                    "required": false
                   },
                   "email": {
                     "type": "string",
-                    "example": "john.doe@example.com"
+                    "example": "john.doe@example.com",
+                    "description": "The email address of the contact",
+                    "required": false
+                  },
+                  "isFavourite": {
+                    "type": "boolean",
+                    "example": false,
+                    "description": "Indicates whether the contact is marked as a favorite",
+                    "required": false
                   },
                   "photo": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The photo to update"
+                    "description": "The photo to update for the contact",
+                    "required": false
                   }
                 }
               }
@@ -416,9 +496,17 @@
                           "type": "string",
                           "example": "+1234567890"
                         },
+                        "contactType": {
+                          "type": "string",
+                          "example": "personal"
+                        },
                         "email": {
                           "type": "string",
                           "example": "john.doe@example.com"
+                        },
+                        "isFavourite": {
+                          "type": "boolean",
+                          "example": false
                         },
                         "photo": {
                           "type": "string",
@@ -444,7 +532,7 @@
       },
       "delete": {
         "tags": [
-          "ContactId"
+          "Contacts"
         ],
         "summary": "Delete contact by ID",
         "operationId": "deleteContact",
